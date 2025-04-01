@@ -27,7 +27,7 @@ class AuthService {
 
       return null; // null means success
     } on FirebaseAuthException catch (e) {
-      return e.message; // return Firebase error message
+      return e.message; // Firebase-specific error
     } catch (e) {
       return 'Something went wrong. Please try again.';
     }
@@ -43,7 +43,7 @@ class AuthService {
         email: email,
         password: password,
       );
-      return null; // success
+      return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
     } catch (e) {
@@ -51,11 +51,11 @@ class AuthService {
     }
   }
 
-  // Logout (optional utility)
+  // Logout
   Future<void> logout() async {
     await _auth.signOut();
   }
 
-  // Get current user
+  // Current user
   User? get currentUser => _auth.currentUser;
 }
