@@ -7,6 +7,7 @@ class TransactionCard extends StatelessWidget {
   final double amount;
   final IconData icon;
   final Color iconColor;
+  final bool isExpense;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -18,6 +19,7 @@ class TransactionCard extends StatelessWidget {
     required this.amount,
     required this.icon,
     required this.iconColor,
+    required this.isExpense,
     this.onTap,
     this.onEdit,
     this.onDelete,
@@ -84,15 +86,15 @@ class TransactionCard extends StatelessWidget {
                 height: 30.h,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: amount < 0 ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                  color: isExpense ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
-                  "${amount < 0 ? '-' : '+'}\$${amount.abs().toStringAsFixed(2)}",
+                  "${isExpense ? '-' : '+'}\$${amount.toStringAsFixed(2)}",
                   style: GoogleFonts.poppins(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: amount < 0 ? Colors.red : Colors.green,
+                    color: isExpense ? Colors.red : Colors.green,
                   ),
                 ),
               ),
@@ -104,7 +106,6 @@ class TransactionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // View Details text
               GestureDetector(
                 onTap: onViewDetails,
                 child: Text(
@@ -116,14 +117,16 @@ class TransactionCard extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // Edit / Delete icons
               Row(
                 children: [
                   _iconActionButton(Icons.edit, onEdit),
                   SizedBox(width: 10.w),
-                  _iconActionButton(Icons.delete, onDelete,
-                      bgColor: Colors.red.withOpacity(0.1), iconColor: Colors.red),
+                  _iconActionButton(
+                    Icons.delete,
+                    onDelete,
+                    bgColor: Colors.red.withOpacity(0.1),
+                    iconColor: Colors.red,
+                  ),
                 ],
               ),
             ],
@@ -133,7 +136,12 @@ class TransactionCard extends StatelessWidget {
     );
   }
 
-  Widget _iconActionButton(IconData icon, VoidCallback? onPressed, {Color? bgColor, Color? iconColor}) {
+  Widget _iconActionButton(
+    IconData icon,
+    VoidCallback? onPressed, {
+    Color? bgColor,
+    Color? iconColor,
+  }) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(

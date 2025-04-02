@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mohamed222348_expense_tracker/model/transaction_model.dart';
+
 
 class TransactionService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -31,9 +33,38 @@ class TransactionService {
           .collection('transactions')
           .add(transaction);
 
-      return null; // success
+      return null;
     } catch (e) {
       return 'Failed to add transaction: $e';
     }
+  }
+
+  Stream<List<TransactionModel>> getTransactions({
+    required bool isExpense,
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+  }) {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return const Stream.empty();
+    }
+
+    Query query = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('transactions')
+        .where('type', isEqualTo: isExpense ? 'expense' : 'income')
+        .orderBy('date', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => TransactionModel.fromDocument(doc))
+          .toList();
+    });
   }
 }

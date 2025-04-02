@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mohamed222348_expense_tracker/model/transaction_model.dart';
+import 'package:mohamed222348_expense_tracker/services/transaction_service.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/upper_bar.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/bottom_bar.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/transaction_card.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/search_transaction.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/filter_transaction.dart';
 import 'package:mohamed222348_expense_tracker/ui/screens/view_transaction.dart';
+import 'package:mohamed222348_expense_tracker/utils/category_icon.dart';
 
 
 class TransactionListScreen extends StatefulWidget {
@@ -16,10 +19,11 @@ class TransactionListScreen extends StatefulWidget {
 }
 
 class _TransactionListScreenState extends State<TransactionListScreen> {
+  final TransactionService _transactionService = TransactionService();
+
   String _searchQuery = '';
   String _selectedFilter = 'Newest';
   bool _isExpense = true;
-
   int selectedIndex = 3;
 
   void _onTabSelected(int index) {
@@ -115,83 +119,51 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
               ],
             ),
 
-            // Switch (Income/Expenses)
             _buildSwitch(),
-
             SizedBox(height: 16.h),
-            // Date + Total badge
-Padding(
-  padding: EdgeInsets.only(bottom: 12.h),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text(
-        "Sat, 20 March 2021",
-        style: TextStyle(
-          fontSize: 13.sp,
-          fontWeight: FontWeight.w500,
-          color: Colors.grey.shade600,
-        ),
-      ),
-      Container(
-        width: 120.w,
-        height: 28.h,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Text(
-          "-\$500.00",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 13.sp,
-            color: Colors.red,
-          ),
-        ),
-      ),
-    ],
-  ),
-),
 
-            // List of Transactions
+            // Live transaction stream
             Expanded(
-              child: ListView(
-                children: [
-                  TransactionCard(
-  category: "Home Rent",
-  amount: -350.0,
-  icon: Icons.home,
-  iconColor: Colors.orange,
-  onViewDetails: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ViewTransactionScreen(
-          amount: -350.0,
-          category: "Home Rent",
-          note: "Monthly payment",
-          date: DateTime(2021, 3, 20),
-          isExpense: true,
-        ),
-      ),
-    );
-  },
-),
+              child: StreamBuilder<List<TransactionModel>>(
+                stream: _transactionService.getTransactions(isExpense: _isExpense),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  TransactionCard(
-                    category: "Pet Groom",
-                    amount: -50.0,
-                    icon: Icons.pets,
-                    iconColor: Colors.blue,
-                  ),
-                  TransactionCard(
-                    category: "Recharge",
-                    amount: -100.0,
-                    icon: Icons.phone_android,
-                    iconColor: Colors.teal,
-                  ),
-                ],
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text("No transactions found."));
+                  }
+
+                  final transactions = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: transactions.length,
+                    itemBuilder: (context, index) {
+                      final tx = transactions[index];
+                      return TransactionCard(
+                        category: tx.category,
+                        amount: tx.amount,
+                        icon: getCategoryIcon(tx.category),
+                        iconColor: getCategoryColor(tx.category),
+                        isExpense: tx.isExpense,
+                        onViewDetails: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ViewTransactionScreen(
+                                amount: tx.amount,
+                                category: tx.category,
+                                note: tx.note,
+                                date: tx.date,
+                                isExpense: tx.isExpense,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
