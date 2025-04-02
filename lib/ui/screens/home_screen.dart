@@ -4,6 +4,7 @@ import 'package:mohamed222348_expense_tracker/services/auth_service.dart';
 import 'package:mohamed222348_expense_tracker/ui/screens/auth/login_screen.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/upper_bar.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/bottom_bar.dart';
+import 'package:mohamed222348_expense_tracker/ui/screens/add_transaction.dart'; // ✅ import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,14 +17,25 @@ class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
 
   void _onTabSelected(int index) {
-    setState(() {
-      selectedIndex = index;
-    });
-    // TODO: Navigate to the selected screen
+  setState(() {
+    selectedIndex = index;
+  });
+
+  if (index == 0) {
+    // Stay on home
+  } else if (index == 3) {
+    Navigator.pushReplacementNamed(context, '/list');
+  } else if (index == 2) {
+    Navigator.pushReplacementNamed(context, '/profile'); // if you have one
   }
+}
+
 
   void _onFabPressed() {
-    // TODO: Navigate to Add Expense screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+    );
   }
 
   @override
