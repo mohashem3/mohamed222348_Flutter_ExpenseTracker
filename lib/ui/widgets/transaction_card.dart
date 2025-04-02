@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class TransactionCard extends StatelessWidget {
   final String category;
@@ -8,6 +9,7 @@ class TransactionCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final bool isExpense;
+  final DateTime dateTime;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -20,6 +22,7 @@ class TransactionCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.isExpense,
+    required this.dateTime,
     this.onTap,
     this.onEdit,
     this.onDelete,
@@ -50,10 +53,9 @@ class TransactionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Main row with icon, title, amount
+          // Top row: icon, category, amount
           Row(
             children: [
-              // Circle icon
               Container(
                 width: 40.w,
                 height: 40.w,
@@ -68,8 +70,6 @@ class TransactionCard extends StatelessWidget {
                 child: Icon(icon, color: Colors.white, size: 20.sp),
               ),
               SizedBox(width: 16.w),
-
-              // Category text
               Expanded(
                 child: Text(
                   category,
@@ -79,8 +79,6 @@ class TransactionCard extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // Amount Badge
               Container(
                 width: 110.w,
                 height: 30.h,
@@ -100,25 +98,32 @@ class TransactionCard extends StatelessWidget {
               ),
             ],
           ),
+
           SizedBox(height: 12.h),
 
-          // View + Action Buttons
+          // Bottom row: Date/Time badge + Action Icons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: onViewDetails,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
                 child: Text(
-                  "View Details",
+                  DateFormat('dd MMM, h:mm a').format(dateTime),
                   style: GoogleFonts.poppins(
-                    fontSize: 13.sp,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFFF57C00),
+                    color: Colors.orange.shade700,
                   ),
                 ),
               ),
               Row(
                 children: [
+                  _iconActionButton(Icons.info_outline, onViewDetails, bgColor: Colors.blue.shade50, iconColor: Colors.blue),
+                  SizedBox(width: 10.w),
                   _iconActionButton(Icons.edit, onEdit),
                   SizedBox(width: 10.w),
                   _iconActionButton(

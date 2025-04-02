@@ -18,8 +18,9 @@ class FilterTransaction extends StatelessWidget {
       'Oldest',
       'Amount ↑',
       'Amount ↓',
-      'Category A-Z',
-      'Category Z-A',
+      'This Month',
+      'This Year',
+      'Last 7 Days',
     ];
 
     return Container(

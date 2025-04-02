@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mohamed222348_expense_tracker/model/transaction_model.dart';
 
-
 class TransactionService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -39,32 +38,18 @@ class TransactionService {
     }
   }
 
-  Stream<List<TransactionModel>> getTransactions({
-    required bool isExpense,
-    int limit = 10,
-    DocumentSnapshot? startAfter,
-  }) {
+  Future<List<TransactionModel>> getAllTransactions({required bool isExpense}) async {
     final user = _auth.currentUser;
-    if (user == null) {
-      return const Stream.empty();
-    }
+    if (user == null) return [];
 
-    Query query = _firestore
+    final query = await _firestore
         .collection('users')
         .doc(user.uid)
         .collection('transactions')
         .where('type', isEqualTo: isExpense ? 'expense' : 'income')
         .orderBy('date', descending: true)
-        .limit(limit);
+        .get();
 
-    if (startAfter != null) {
-      query = query.startAfterDocument(startAfter);
-    }
-
-    return query.snapshots().map((snapshot) {
-      return snapshot.docs
-          .map((doc) => TransactionModel.fromDocument(doc))
-          .toList();
-    });
+    return query.docs.map((doc) => TransactionModel.fromDocument(doc)).toList();
   }
 }
