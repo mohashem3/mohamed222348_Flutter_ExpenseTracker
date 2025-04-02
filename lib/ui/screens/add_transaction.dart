@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mohamed222348_expense_tracker/model/transaction_model.dart';
 import 'package:mohamed222348_expense_tracker/services/transaction_service.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/upper_bar.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final TransactionModel? transaction; // ✅ accept optional transaction
+  const AddTransactionScreen({super.key, this.transaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -19,27 +21,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final noteController = TextEditingController();
   final customCategoryController = TextEditingController();
   DateTime selectedDate = DateTime.now();
+  bool isSaving = false;
 
   final List<String> expenseCategories = [
-    'Transport',
-    'Food',
-    'Shopping',
-    'Entertainment',
-    'Health',
-    'Bills',
-    'Travel',
-    'Custom Category',
+    'Transport', 'Food', 'Shopping', 'Entertainment', 'Health', 'Bills', 'Travel', 'Custom Category',
   ];
 
   final List<String> incomeCategories = [
-    'Salary',
-    'Freelance',
-    'Business',
-    'Investment',
-    'Gift',
-    'Other',
-    'Custom Category',
+    'Salary', 'Freelance', 'Business', 'Investment', 'Gift', 'Other', 'Custom Category',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final tx = widget.transaction;
+    if (tx != null) {
+      isExpense = tx.isExpense;
+      selectedCategory = incomeCategories.contains(tx.category) || expenseCategories.contains(tx.category)
+          ? tx.category
+          : 'Custom Category';
+      if (selectedCategory == 'Custom Category') customCategoryController.text = tx.category;
+      amountController.text = tx.amount.toString();
+      noteController.text = tx.note;
+      selectedDate = tx.date;
+    }
+  }
 
   void pickDate() async {
     final picked = await showDatePicker(
@@ -49,39 +55,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       lastDate: DateTime.now(),
     );
     if (picked != null) setState(() => selectedDate = picked);
-  }
-
-  IconData getCategoryIcon(String category) {
-    switch (category) {
-      case 'Transport':
-        return Icons.directions_car;
-      case 'Food':
-        return Icons.fastfood;
-      case 'Shopping':
-        return Icons.shopping_bag;
-      case 'Entertainment':
-        return Icons.movie;
-      case 'Health':
-        return Icons.healing;
-      case 'Bills':
-        return Icons.receipt_long;
-      case 'Travel':
-        return Icons.flight;
-      case 'Salary':
-        return Icons.attach_money;
-      case 'Freelance':
-        return Icons.laptop_mac;
-      case 'Business':
-        return Icons.business_center;
-      case 'Investment':
-        return Icons.trending_up;
-      case 'Gift':
-        return Icons.card_giftcard;
-      case 'Other':
-        return Icons.help_outline;
-      default:
-        return Icons.category;
-    }
   }
 
   Future<void> saveTransaction() async {
@@ -100,18 +73,34 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       return;
     }
 
-    await TransactionService().addTransaction(
-    amount: double.parse(amountController.text.trim()),
-    category: category,
-    note: noteController.text.trim(),
-    date: selectedDate,
-    isExpense: isExpense, // ✅ required
-  );
+    setState(() => isSaving = true);
 
+    final service = TransactionService();
+    final transaction = widget.transaction;
+
+    if (transaction != null) {
+      await service.updateTransaction(
+        id: transaction.id,
+        amount: double.parse(amountText),
+        category: category,
+        note: noteController.text.trim(),
+        date: selectedDate,
+        isExpense: isExpense,
+      );
+    } else {
+      await service.addTransaction(
+        amount: double.parse(amountText),
+        category: category,
+        note: noteController.text.trim(),
+        date: selectedDate,
+        isExpense: isExpense,
+      );
+    }
 
     showMessage('Transaction saved!', isSuccess: true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (context.mounted) Navigator.pop(context);
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (context.mounted) Navigator.pop(context, 'updated');
+
   }
 
   void showMessage(String msg, {bool isSuccess = false}) {
@@ -133,7 +122,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final categories = isExpense ? expenseCategories : incomeCategories;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFF),
       appBar: const UpperBar(),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -146,7 +134,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 SizedBox(height: 24.h),
                 _buildAmount(),
                 SizedBox(height: 24.h),
-
                 selectedCategory == 'Custom Category'
                     ? _inputField(
                         icon: Icons.edit,
@@ -180,9 +167,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ),
                         ),
                       ),
-
                 SizedBox(height: 16.h),
-
                 _inputField(
                   icon: Icons.edit_note,
                   child: TextField(
@@ -193,9 +178,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                   ),
                 ),
-
                 SizedBox(height: 16.h),
-
                 _inputField(
                   icon: Icons.calendar_today,
                   child: GestureDetector(
@@ -206,66 +189,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                   ),
                 ),
-
                 SizedBox(height: 28.h),
                 _buildSaveButton(),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSwitch() {
-    return Container(
-      height: 50.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40.r),
-        border: Border.all(color: _gradientColor().withOpacity(0.4), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          _switchTab("Income", !isExpense),
-          _switchTab("Expenses", isExpense),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAmount() {
-    return Container(
-      height: 80.h,
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(40.r),
-        border: Border.all(color: _gradientColor().withOpacity(0.4), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Text("\$", style: GoogleFonts.poppins(fontSize: 22.sp, color: Colors.black54)),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFF57C00), Color(0xFFFFD54F)],
-              ).createShader(bounds),
-              blendMode: BlendMode.srcIn,
-              child: TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 36.sp, fontWeight: FontWeight.w700),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: '0',
-                  hintStyle: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -302,52 +231,115 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _inputField({
-    required IconData icon,
-    required Widget child,
-    double iconSize = 20,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _gradientColor().withOpacity(0.3), width: 1),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: iconSize, color: _gradientColor()),
-          SizedBox(width: 12.w),
-          Expanded(child: child),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSaveButton() {
-    return GestureDetector(
-      onTap: saveTransaction,
-      child: Container(
-        height: 52.h,
-        width: double.infinity,
+  Widget _buildSwitch() => Container(
+        height: 50.h,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.r),
-          gradient: const LinearGradient(
-            colors: [Color(0xFFF57C00), Color(0xFFFFD54F)],
-          ),
+          borderRadius: BorderRadius.circular(40.r),
+          border: Border.all(color: _gradientColor().withOpacity(0.4), width: 1.2),
         ),
-        child: Center(
-          child: Text(
-            "SAVE",
-            style: GoogleFonts.poppins(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+        child: Row(
+          children: [
+            _switchTab("Income", !isExpense),
+            _switchTab("Expenses", isExpense),
+          ],
+        ),
+      );
+
+  Widget _buildAmount() => Container(
+        height: 80.h,
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(40.r),
+          border: Border.all(color: _gradientColor().withOpacity(0.4), width: 1.2),
+        ),
+        child: Row(
+          children: [
+            Text("\$", style: GoogleFonts.poppins(fontSize: 22.sp, color: Colors.black54)),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [Color(0xFFF57C00), Color(0xFFFFD54F)],
+                ).createShader(bounds),
+                blendMode: BlendMode.srcIn,
+                child: TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(fontSize: 36.sp, fontWeight: FontWeight.w700),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintText: '0',
+                    hintStyle: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _inputField({required IconData icon, required Widget child, double iconSize = 20}) =>
+      Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: _gradientColor().withOpacity(0.3), width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: iconSize, color: _gradientColor()),
+            SizedBox(width: 12.w),
+            Expanded(child: child),
+          ],
+        ),
+      );
+
+  Widget _buildSaveButton() => GestureDetector(
+        onTap: isSaving ? null : saveTransaction,
+        child: Container(
+          height: 52.h,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFF57C00), Color(0xFFFFD54F)],
             ),
           ),
+          child: Center(
+            child: isSaving
+                ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                : Text(
+                    "SAVE",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
         ),
-      ),
-    );
+      );
+
+  IconData getCategoryIcon(String category) {
+    switch (category) {
+      case 'Transport': return Icons.directions_car;
+      case 'Food': return Icons.fastfood;
+      case 'Shopping': return Icons.shopping_bag;
+      case 'Entertainment': return Icons.movie;
+      case 'Health': return Icons.healing;
+      case 'Bills': return Icons.receipt_long;
+      case 'Travel': return Icons.flight;
+      case 'Salary': return Icons.attach_money;
+      case 'Freelance': return Icons.laptop_mac;
+      case 'Business': return Icons.business_center;
+      case 'Investment': return Icons.trending_up;
+      case 'Gift': return Icons.card_giftcard;
+      case 'Other': return Icons.help_outline;
+      default: return Icons.category;
+    }
   }
 }

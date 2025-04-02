@@ -282,40 +282,80 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
             ),
 
             // Transaction List
-            Expanded(
-              child: _isFirstLoad
-                  ? const Center(child: CircularProgressIndicator())
-                  : _filteredTransactions.isEmpty
-                      ? const Center(child: Text("No transactions found."))
-                      : ListView.builder(
-                          itemCount: _filteredTransactions.length,
-                          itemBuilder: (context, index) {
-                            final tx = _filteredTransactions[index];
-                            return TransactionCard(
-                              category: tx.category,
-                              amount: tx.amount,
-                              icon: getCategoryIcon(tx.category),
-                              iconColor: getCategoryColor(tx.category),
-                              isExpense: tx.isExpense,
-                              dateTime: tx.date,
-                              onViewDetails: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ViewTransactionScreen(
-                                      amount: tx.amount,
-                                      category: tx.category,
-                                      note: tx.note,
-                                      date: tx.date,
-                                      isExpense: tx.isExpense,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
+            // Inside the ListView.builder block:
+Expanded(
+  child: _isFirstLoad
+      ? const Center(child: CircularProgressIndicator())
+      : _filteredTransactions.isEmpty
+          ? const Center(child: Text("No transactions found."))
+          : ListView.builder(
+              itemCount: _filteredTransactions.length,
+              itemBuilder: (context, index) {
+                final tx = _filteredTransactions[index];
+                return TransactionCard(
+                  category: tx.category,
+                  amount: tx.amount,
+                  icon: getCategoryIcon(tx.category),
+                  iconColor: getCategoryColor(tx.category),
+                  isExpense: tx.isExpense,
+                  dateTime: tx.date,
+                  onEdit: () async {
+  final result = await Navigator.pushNamed(
+    context,
+    '/add',
+    arguments: tx,
+  );
+
+  // If we get a result like 'updated', refresh list
+  if (result == 'updated') {
+    await _fetchTransactions();
+  }
+},
+
+                  onDelete: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text("Confirm Deletion"),
+                        content: const Text("Are you sure you want to delete this transaction?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text("Cancel"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                            child: const Text("Delete", style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      await _transactionService.deleteTransaction(tx.id);
+                      await _fetchTransactions(); // Refresh list
+                    }
+                  },
+                  onViewDetails: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ViewTransactionScreen(
+                          amount: tx.amount,
+                          category: tx.category,
+                          note: tx.note,
+                          date: tx.date,
+                          isExpense: tx.isExpense,
                         ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
+)
+
           ],
         ),
       ),

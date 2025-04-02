@@ -38,6 +38,39 @@ class TransactionService {
     }
   }
 
+  Future<String?> updateTransaction({
+    required String id,
+    required double amount,
+    required String category,
+    required String note,
+    required DateTime date,
+    required bool isExpense,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'User not logged in.';
+
+      final updatedData = {
+        'amount': amount,
+        'category': category,
+        'note': note,
+        'date': Timestamp.fromDate(date),
+        'type': isExpense ? 'expense' : 'income',
+      };
+
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('transactions')
+          .doc(id)
+          .update(updatedData);
+
+      return null;
+    } catch (e) {
+      return 'Failed to update transaction: $e';
+    }
+  }
+
   Future<List<TransactionModel>> getAllTransactions({required bool isExpense}) async {
     final user = _auth.currentUser;
     if (user == null) return [];
@@ -52,4 +85,56 @@ class TransactionService {
 
     return query.docs.map((doc) => TransactionModel.fromDocument(doc)).toList();
   }
+
+  // ✅ NEW: Delete Transaction
+  Future<String?> deleteTransaction(String id) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'User not logged in.';
+
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('transactions')
+          .doc(id)
+          .delete();
+
+      return null;
+    } catch (e) {
+      return 'Failed to delete transaction: $e';
+    }
+  }
+
+  Future<Map<String, double>> calculateTotals() async {
+  final user = _auth.currentUser;
+  if (user == null) return {'income': 0, 'expense': 0, 'balance': 0};
+
+  final query = await _firestore
+      .collection('users')
+      .doc(user.uid)
+      .collection('transactions')
+      .get();
+
+  double income = 0;
+  double expense = 0;
+
+  for (var doc in query.docs) {
+    final data = doc.data();
+    final amount = (data['amount'] ?? 0).toDouble();
+    final type = data['type'] ?? 'expense';
+
+    if (type == 'income') {
+      income += amount;
+    } else {
+      expense += amount;
+    }
+  }
+
+  return {
+    'income': income,
+    'expense': expense,
+    'balance': income - expense,
+  };
 }
+}
+

@@ -98,9 +98,7 @@ class TransactionCard extends StatelessWidget {
               ),
             ],
           ),
-
           SizedBox(height: 12.h),
-
           // Bottom row: Date/Time badge + Action Icons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
