@@ -53,6 +53,7 @@ class _SignupScreenState extends State<SignupScreen> {
     showMessage("Account created successfully!", isSuccess: true);
 
     await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
   } else {
     showMessage(message);

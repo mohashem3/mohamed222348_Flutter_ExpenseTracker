@@ -89,6 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (index == 2) {
       Navigator.pushReplacementNamed(context, '/profile');
     }
+    else if (index == 1) {
+      Navigator.pushReplacementNamed(context, '/stats');
+    }
   }
 
   void _onFabPressed() async {
@@ -139,8 +142,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 IconButton(
                   onPressed: () async {
+                    final navigator = Navigator.of(context); // Capture before async gap
                     await AuthService().logout();
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                    navigator.pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+
                   },
                   icon: const Icon(Icons.logout_rounded, color: Colors.deepOrange),
                 )
@@ -156,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24.r),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF00B4DB), Color(0xFF8E2DE2)],
+                  colors: [Color(0xFFFFD54F), Color(0xFFF57C00)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -177,14 +182,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Icon(Icons.arrow_downward, color: Colors.greenAccent, size: 20.sp),
                           SizedBox(width: 4.w),
-                          Text("\$${income.toStringAsFixed(2)}", style: GoogleFonts.poppins(color: Colors.white, fontSize: 14.sp)),
+                          Text("\$${income.toStringAsFixed(2)}", style: GoogleFonts.poppins(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       Row(
                         children: [
                           Icon(Icons.arrow_upward, color: Colors.redAccent, size: 20.sp),
                           SizedBox(width: 4.w),
-                          Text("\$${expense.toStringAsFixed(2)}", style: GoogleFonts.poppins(color: Colors.white, fontSize: 14.sp)),
+                          Text("\$${expense.toStringAsFixed(2)}", style: GoogleFonts.poppins(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -216,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, index) {
                         final tx = todayTransactions[index];
                         final icon = getCategoryIcon(tx.category);
-                        final color = getCategoryColor(tx.category).withOpacity(0.7); // 🔥 softer style
+                        final color = getCategoryColor(tx.category).withAlpha((0.7 * 255).toInt()); // 🔥 softer style
                         return TransactionCard(
                           category: tx.category,
                           amount: tx.amount,

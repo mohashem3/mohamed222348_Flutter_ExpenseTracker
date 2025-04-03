@@ -61,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
 // Wait a moment then navigate
 await Future.delayed(const Duration(milliseconds: 500));
+if (!mounted) return;
 Navigator.pushReplacement(
   context,
   MaterialPageRoute(builder: (_) => const HomeScreen()),

@@ -112,6 +112,12 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
     } else if (index == 2) {
       Navigator.pushReplacementNamed(context, '/profile');
     }
+    else if (index == 1) {
+      Navigator.pushReplacementNamed(context, '/stats');
+    }
+    else if (index == 3) {
+      Navigator.pushReplacementNamed(context, '/list');
+    }
   }
 
   void _onFabPressed() {
@@ -139,7 +145,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
       margin: EdgeInsets.only(top: 16.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(40.r),
-        border: Border.all(color: const Color(0xFFF57C00).withOpacity(0.4), width: 1),
+        border: Border.all(color: const Color(0xFFF57C00).withAlpha((0.4 * 255).toInt()), width: 1),
       ),
       child: Row(
         children: [
@@ -247,11 +253,11 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                 color: _isExpense ? Colors.red.shade50 : Colors.green.shade50,
                 borderRadius: BorderRadius.circular(22.r),
                 border: Border.all(
-                  color: (_isExpense ? Colors.red.shade200 : Colors.green.shade200).withOpacity(0.4),
+                  color: (_isExpense ? Colors.red.shade200 : Colors.green.shade200).withAlpha((0.4 * 255).toInt()),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (_isExpense ? Colors.red : Colors.green).withOpacity(0.2),
+                    color: (_isExpense ? Colors.red : Colors.green).withAlpha((0.2 * 255).toInt()),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   )

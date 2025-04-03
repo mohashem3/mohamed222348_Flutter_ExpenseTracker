@@ -64,6 +64,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else if (index == 3) {
       Navigator.pushReplacementNamed(context, '/list');
     }
+    else if (index == 1) {
+      Navigator.pushReplacementNamed(context, '/stats');
+    }
+    else if (index == 2) {
+      Navigator.pushReplacementNamed(context, '/profile');
+    }
   }
 
   void _showSnack(String msg, {bool error = false}) {
@@ -117,14 +123,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
 
               try {
-                await _auth.currentUser!.reauthenticateWithCredential(cred);
-                Navigator.pop(context);
-                setState(() => isPasswordEditable = true);
-                _showSnack("Authentication successful!");
-              } catch (e) {
-                Navigator.pop(context);
-                _showSnack("Wrong password", error: true);
-              }
+  await _auth.currentUser!.reauthenticateWithCredential(cred);
+  if (!mounted) return;
+
+  Navigator.pop(context);
+  setState(() => isPasswordEditable = true);
+  _showSnack("Authentication successful!");
+} catch (e) {
+  if (!mounted) return;
+
+  Navigator.pop(context);
+  _showSnack("Wrong password", error: true);
+}
+
             },
             child: const Text("Confirm"),
           ),
@@ -154,15 +165,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
 
-Future<bool> _requestStoragePermission() async {
-  final status = await Permission.storage.request();
-  if (status.isGranted) {
-    return true;
-  } else {
-    _showSnack("Storage permission denied", error: true);
-    return false;
-  }
-}
+// Future<bool> _requestStoragePermission() async {
+//   final status = await Permission.storage.request();
+//   if (status.isGranted) {
+//     return true;
+//   } else {
+//     _showSnack("Storage permission denied", error: true);
+//     return false;
+//   }
+// }
 
  Future<void> _exportData() async {
   final user = _auth.currentUser;
@@ -211,6 +222,14 @@ Future<bool> _requestStoragePermission() async {
   _showSnack("Exported to ${file.path}");
 }
 
+Future<void> _handleLogout() async {
+  await _auth.signOut();
+
+  // Check if the widget is still in the tree
+  if (!mounted) return;
+
+  Navigator.pushReplacementNamed(context, '/login');
+}
 
   @override
   Widget build(BuildContext context) {
@@ -274,10 +293,7 @@ Future<bool> _requestStoragePermission() async {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await _auth.signOut();
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
+                  onPressed: _handleLogout,
                   icon: const Icon(Icons.logout, color: Colors.white),
                   label: const Text("Logout", style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(

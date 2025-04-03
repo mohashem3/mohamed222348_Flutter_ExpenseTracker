@@ -32,7 +32,7 @@ class FilterTransaction extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade700),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withAlpha((0.12 * 255).toInt()),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )

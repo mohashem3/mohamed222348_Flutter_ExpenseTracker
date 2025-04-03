@@ -99,6 +99,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     showMessage('Transaction saved!', isSuccess: true);
     await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
     if (context.mounted) Navigator.pop(context, 'updated');
 
   }
@@ -235,7 +236,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         height: 50.h,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(40.r),
-          border: Border.all(color: _gradientColor().withOpacity(0.4), width: 1.2),
+          border: Border.all(color: _gradientColor().withAlpha((0.4 * 255).toInt()), width: 1.2),
+
         ),
         child: Row(
           children: [
@@ -251,7 +253,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(40.r),
-          border: Border.all(color: _gradientColor().withOpacity(0.4), width: 1.2),
+          border: Border.all(color: _gradientColor().withAlpha((0.4 * 255).toInt()), width: 1.2),
+
         ),
         child: Row(
           children: [
@@ -287,7 +290,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: _gradientColor().withOpacity(0.3), width: 1),
+          border: Border.all(color: _gradientColor().withAlpha((0.3 * 255).toInt()), width: 1),
+
         ),
         child: Row(
           children: [

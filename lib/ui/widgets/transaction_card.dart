@@ -38,12 +38,12 @@ class TransactionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: const Color.fromARGB(255, 147, 137, 128).withOpacity(0.2),
+          color: const Color.fromARGB(255, 147, 137, 128).withAlpha((0.2 * 255).toInt()),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withAlpha((0.12 * 255).toInt()),
             blurRadius: 18,
             spreadRadius: 1,
             offset: const Offset(0, 6),
@@ -61,7 +61,7 @@ class TransactionCard extends StatelessWidget {
   height: 40.w,
   decoration: BoxDecoration(
     shape: BoxShape.circle,
-    color: iconColor.withOpacity(0.20), // soft pastel bg
+    color: iconColor.withAlpha((0.20 * 255).toInt()), // soft pastel bg
   ),
   child: Icon(icon, color: iconColor, size: 20.sp), // vibrant icon
 ),
@@ -81,7 +81,7 @@ class TransactionCard extends StatelessWidget {
                 height: 30.h,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isExpense ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                  color: isExpense ? Colors.red.withAlpha((0.1 * 255).toInt()) : Colors.green.withAlpha((0.1 * 255).toInt()),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
@@ -124,7 +124,7 @@ class TransactionCard extends StatelessWidget {
                   _iconActionButton(
                     Icons.delete,
                     onDelete,
-                    bgColor: Colors.red.withOpacity(0.1),
+                    bgColor: Colors.red.withAlpha((0.1 * 255).toInt()),
                     iconColor: Colors.red,
                   ),
                 ],

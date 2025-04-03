@@ -51,5 +51,5 @@ final Map<String, Color> categoryColors = {
 
 
 Color getCategoryColor(String category) {
-  return categoryColors[category] ?? Colors.grey.withOpacity(0.7);
+  return categoryColors[category] ?? Colors.grey.withAlpha((0.7 * 255).toInt());
 }

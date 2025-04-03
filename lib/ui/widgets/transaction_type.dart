@@ -18,7 +18,8 @@ class TransactionTypeSwitch extends StatelessWidget {
       height: 48.h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(40.r),
-        border: Border.all(color: const Color(0xFFF57C00).withOpacity(0.4), width: 1.2),
+        border: Border.all(color: const Color(0xFFF57C00).withAlpha((0.4 * 255).toInt()), width: 1.2),
+        
       ),
       child: Row(
         children: [

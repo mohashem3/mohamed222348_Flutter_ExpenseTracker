@@ -133,7 +133,7 @@ class ViewTransactionScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(40.r),
-        border: Border.all(color: Colors.orange.withOpacity(0.4), width: 1.2),
+        border: Border.all(color: Colors.orange.withAlpha((0.4 * 255).toInt()), width: 1.2),
       ),
       child: Row(
         children: [
@@ -173,7 +173,7 @@ class ViewTransactionScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: iconColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: iconColor.withAlpha((0.3 * 255).toInt()), width: 1),
       ),
       child: Row(
         crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
@@ -183,7 +183,7 @@ class ViewTransactionScreen extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [iconColor.withOpacity(0.9), iconColor.withOpacity(0.5)],
+                colors: [iconColor.withAlpha((0.9 * 255).toInt()), iconColor.withAlpha((0.5 * 255).toInt())],
               ),
             ),
             child: Icon(icon, size: 18.sp, color: Colors.white),

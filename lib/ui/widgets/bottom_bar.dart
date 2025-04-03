@@ -23,7 +23,7 @@ class BottomBar extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withAlpha((0.08 * 255).toInt()),
             blurRadius: 12,
             offset: const Offset(0, -3),
           ),
@@ -40,7 +40,7 @@ class BottomBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _navItem(icon: Icons.home, index: 0),
-              _navItem(icon: Icons.search, index: 1),
+              _navItem(icon: Icons.bar_chart, index: 1),
               SizedBox(width: 56.w), // Reserved space for FAB
               _navItem(icon: Icons.list_alt, index: 3),
               _navItem(icon: Icons.person, index: 2),
@@ -80,7 +80,7 @@ class CenterFAB extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withOpacity(0.4),
+            color: Colors.orange.withAlpha((0.4 * 255).toInt()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
