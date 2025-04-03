@@ -71,20 +71,26 @@ class TransactionService {
     }
   }
 
-  Future<List<TransactionModel>> getAllTransactions({required bool isExpense}) async {
-    final user = _auth.currentUser;
-    if (user == null) return [];
+  Future<List<TransactionModel>> getAllTransactions({bool? isExpense}) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return [];
 
-    final query = await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('transactions')
-        .where('type', isEqualTo: isExpense ? 'expense' : 'income')
-        .orderBy('date', descending: true)
-        .get();
+  Query query = FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('transactions');
 
-    return query.docs.map((doc) => TransactionModel.fromDocument(doc)).toList();
+  if (isExpense != null) {
+    query = query.where('type', isEqualTo: isExpense ? 'expense' : 'income');
   }
+
+  final snapshot = await query.get();
+
+  return snapshot.docs
+      .map((doc) => TransactionModel.fromDocument(doc))
+      .toList();
+}
+
 
   // ✅ NEW: Delete Transaction
   Future<String?> deleteTransaction(String id) async {

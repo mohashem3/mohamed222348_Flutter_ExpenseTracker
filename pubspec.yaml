@@ -12,6 +12,7 @@ dependencies:
   firebase_core: ^2.25.4
   firebase_auth: ^4.17.4
   intl: ^0.18.1
+  
 
   flutter:
     sdk: flutter
@@ -23,7 +24,8 @@ dependencies:
   animated_text_kit: ^4.2.2
   gradient_borders: ^1.0.0
   font_awesome_flutter: ^10.6.0
-
+  awesome_dialog: ^3.0.2
+  permission_handler: ^11.0.0
   get: ^4.6.6
   cupertino_icons: ^1.0.8
 

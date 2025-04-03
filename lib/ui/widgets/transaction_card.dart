@@ -57,18 +57,15 @@ class TransactionCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [iconColor.withOpacity(0.9), iconColor.withOpacity(0.5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Icon(icon, color: Colors.white, size: 20.sp),
-              ),
+  width: 40.w,
+  height: 40.w,
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    color: iconColor.withOpacity(0.20), // soft pastel bg
+  ),
+  child: Icon(icon, color: iconColor, size: 20.sp), // vibrant icon
+),
+
               SizedBox(width: 16.w),
               Expanded(
                 child: Text(

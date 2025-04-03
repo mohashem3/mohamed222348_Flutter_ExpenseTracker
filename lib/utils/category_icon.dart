@@ -49,6 +49,7 @@ final Map<String, Color> categoryColors = {
   'Other': Colors.grey,
 };
 
+
 Color getCategoryColor(String category) {
-  return categoryColors[category] ?? Colors.grey; // fallback for custom
+  return categoryColors[category] ?? Colors.grey.withOpacity(0.7);
 }

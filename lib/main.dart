@@ -9,6 +9,7 @@ import 'ui/screens/transaction_list.dart';
 import 'ui/screens/add_transaction.dart';
 import 'ui/screens/welcome_screen.dart'; // ✅ Import welcome screen
 import 'model/transaction_model.dart';
+import 'ui/screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
             '/login': (context) => const LoginScreen(),
             '/home': (context) => const HomeScreen(),
             '/list': (_) => const TransactionListScreen(),
+            '/profile': (_) => const ProfileScreen(),
           },
           // ✅ Enable dynamic routing with arguments
           onGenerateRoute: (settings) {

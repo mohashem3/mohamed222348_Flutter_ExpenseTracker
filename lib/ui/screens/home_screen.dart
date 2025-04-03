@@ -3,13 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mohamed222348_expense_tracker/model/transaction_model.dart';
 import 'package:mohamed222348_expense_tracker/services/auth_service.dart';
 import 'package:mohamed222348_expense_tracker/services/transaction_service.dart';
 import 'package:mohamed222348_expense_tracker/ui/screens/add_transaction.dart';
 import 'package:mohamed222348_expense_tracker/ui/screens/auth/login_screen.dart';
+import 'package:mohamed222348_expense_tracker/ui/screens/view_transaction.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/bottom_bar.dart';
 import 'package:mohamed222348_expense_tracker/ui/widgets/upper_bar.dart';
-import 'package:mohamed222348_expense_tracker/ui/screens/transaction_list.dart';
+import 'package:mohamed222348_expense_tracker/ui/widgets/transaction_card.dart';
+import 'package:mohamed222348_expense_tracker/utils/category_icon.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,11 +30,14 @@ class _HomeScreenState extends State<HomeScreen> {
   double expense = 0;
   double balance = 0;
 
+  List<TransactionModel> todayTransactions = [];
+
   @override
   void initState() {
     super.initState();
     _loadUserDetails();
     _loadTotals();
+    _loadTodayTransactions();
   }
 
   Future<void> _loadUserDetails() async {
@@ -62,6 +68,20 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _loadTodayTransactions() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final now = DateTime.now();
+    final all = await TransactionService().getAllTransactions();
+    setState(() {
+      todayTransactions = all.where((tx) =>
+        tx.date.year == now.year &&
+        tx.date.month == now.month &&
+        tx.date.day == now.day).toList();
+    });
+  }
+
   void _onTabSelected(int index) {
     setState(() => selectedIndex = index);
     if (index == 3) {
@@ -71,11 +91,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onFabPressed() {
-    Navigator.push(
+  void _onFabPressed() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
     );
+
+    if (result == 'updated' || result == 'added') {
+      await _loadTodayTransactions();
+      await _loadTotals();
+    }
   }
 
   @override
@@ -170,11 +195,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
             SizedBox(height: 20.h),
 
-            // Transactions Preview
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Transactions", style: GoogleFonts.poppins(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                Text("Latest Transactions", style: GoogleFonts.poppins(fontSize: 16.sp, fontWeight: FontWeight.w600)),
                 GestureDetector(
                   onTap: () => Navigator.pushReplacementNamed(context, '/list'),
                   child: Text("View All", style: GoogleFonts.poppins(fontSize: 14.sp, color: Colors.deepOrange)),
@@ -185,15 +209,67 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 16.h),
 
             Expanded(
-              child: ListView(
-                children: [
-                  _transactionItem('Food', '-\$630.00', Colors.pink, Icons.fastfood),
-                  _transactionItem('Entertainment', '-\$240.00', Colors.deepPurple, Icons.movie),
-                  _transactionItem('Transport', '-\$500.00', Colors.orange, Icons.directions_car),
-                  _transactionItem('Shopping', '-\$100.00', Colors.purple, Icons.shopping_bag),
-                  _transactionItem('Fuel', '-\$250.00', Colors.grey, Icons.local_gas_station),
-                ],
-              ),
+              child: todayTransactions.isEmpty
+                  ? const Center(child: Text("No transactions today."))
+                  : ListView.builder(
+                      itemCount: todayTransactions.length,
+                      itemBuilder: (context, index) {
+                        final tx = todayTransactions[index];
+                        final icon = getCategoryIcon(tx.category);
+                        final color = getCategoryColor(tx.category).withOpacity(0.7); // 🔥 softer style
+                        return TransactionCard(
+                          category: tx.category,
+                          amount: tx.amount,
+                          icon: icon,
+                          iconColor: color,
+                          isExpense: tx.isExpense,
+                          dateTime: tx.date,
+                          onViewDetails: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ViewTransactionScreen(
+                                  amount: tx.amount,
+                                  category: tx.category,
+                                  note: tx.note,
+                                  date: tx.date,
+                                  isExpense: tx.isExpense,
+                                ),
+                              ),
+                            );
+                          },
+                          onEdit: () async {
+                            final result = await Navigator.pushNamed(context, '/add', arguments: tx);
+                            if (result == 'updated') {
+                              await _loadTodayTransactions();
+                              await _loadTotals();
+                            }
+                          },
+                          onDelete: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text("Confirm Deletion"),
+                                content: const Text("Are you sure you want to delete this transaction?"),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                    child: const Text("Delete", style: TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              await TransactionService().deleteTransaction(tx.id);
+                              await _loadTodayTransactions();
+                              await _loadTotals();
+                            }
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -204,52 +280,6 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: selectedIndex,
         onTabSelected: _onTabSelected,
         onFabPressed: _onFabPressed,
-      ),
-    );
-  }
-
-  Widget _transactionItem(String label, String amount, Color color, IconData icon) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: color.withOpacity(0.2),
-            radius: 24.r,
-            child: Icon(icon, color: color, size: 22.sp),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: GoogleFonts.poppins(fontSize: 15.sp, fontWeight: FontWeight.w600)),
-                SizedBox(height: 4.h),
-                Text("Today", style: GoogleFonts.poppins(fontSize: 12.sp, color: Colors.grey)),
-              ],
-            ),
-          ),
-          Text(
-            amount,
-            style: GoogleFonts.poppins(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.redAccent,
-            ),
-          ),
-        ],
       ),
     );
   }
