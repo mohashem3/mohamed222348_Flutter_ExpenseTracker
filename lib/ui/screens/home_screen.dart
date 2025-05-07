@@ -56,82 +56,112 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadTodayTransactions();
   }
 
-  // Retrieves current user's display name from Firestore and extracts initials.
-  Future<void> _loadUserDetails() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final name = doc['name'] ?? 'User';
-      final initials = _getInitials(name);
-      setState(() {
-        userName = name;
-        userInitials = initials;
-      });
-    }
-  }
+ // 🔹 Retrieves the current user's display name from Firestore
+// and extracts their initials for display in the UI.
+Future<void> _loadUserDetails() async {
+  final user = FirebaseAuth.instance.currentUser; // Get the currently logged-in Firebase user
 
-  // Helper method to extract initials from full name string.
-  // Example: "John Smith" → "JS", "Ayman" → "A"
-  String _getInitials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
-    return parts[0][0].toUpperCase() + parts[1][0].toUpperCase();
-  }
+  if (user != null) {
+    // Fetch the document associated with this user from the 'users' collection in Firestore
+    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
-  // Calculates total income and total expense from all user transactions
-  // and computes balance by subtracting expenses from income.
-  Future<void> _loadTotals() async {
-    final totals = await TransactionService().calculateTotals();
+    // Extract the name field from the document, or use "User" as a fallback
+    final name = doc['name'] ?? 'User';
+
+    // Use helper method to get initials from the name
+    final initials = _getInitials(name);
+
+    // Update the UI with the fetched name and generated initials
     setState(() {
-      income = totals['income'] ?? 0;
-      expense = totals['expense'] ?? 0;
-      balance = income - expense;
+      userName = name;
+      userInitials = initials;
     });
   }
+}
 
-  // Loads only the transactions made today by the current user.
-  // Filters full transaction list by today's date.
-  Future<void> _loadTodayTransactions() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final now = DateTime.now();
-    final all = await TransactionService().getAllTransactions();
-    setState(() {
-      todayTransactions = all.where((tx) =>
-        tx.date.year == now.year &&
-        tx.date.month == now.month &&
-        tx.date.day == now.day).toList();
-    });
+// 🔹 Helper function that returns initials from a given full name
+// Examples: "John Smith" => "JS", "Ayman" => "A"
+String _getInitials(String name) {
+  final parts = name.trim().split(' '); // Split the name into parts by spaces
+  if (parts.length == 1) {
+    // If the name is a single word (e.g., "Ayman"), return first letter capitalized
+    return parts[0].substring(0, 1).toUpperCase();
   }
+
+  // If the name has two or more words, return the first letter of the first and second words
+  return parts[0][0].toUpperCase() + parts[1][0].toUpperCase();
+}
+
+// 🔹 Calculates total income and total expense for the current user,
+// then computes the balance as income - expense
+Future<void> _loadTotals() async {
+  // Call the service method that sums all income and expense transactions
+  final totals = await TransactionService().calculateTotals();
+
+  // Update the UI state with the new calculated values
+  setState(() {
+    income = totals['income'] ?? 0;
+    expense = totals['expense'] ?? 0;
+    balance = income - expense;
+  });
+}
+
+// 🔹 Loads only the transactions created today (based on date match)
+Future<void> _loadTodayTransactions() async {
+  final user = FirebaseAuth.instance.currentUser; // Get the currently logged-in user
+  if (user == null) return; // Exit early if no user is logged in
+
+  final now = DateTime.now(); // Get the current date and time
+
+  // Fetch all transactions for the user using the service layer
+  final all = await TransactionService().getAllTransactions();
+
+  // Filter transactions to keep only those that match today's date
+  setState(() {
+    todayTransactions = all.where((tx) =>
+      tx.date.year == now.year &&
+      tx.date.month == now.month &&
+      tx.date.day == now.day
+    ).toList();
+  });
+}
+
 
   // Handles bottom navigation tab switching.
-  // Navigates to different named routes based on selected index.
-  void _onTabSelected(int index) {
-    setState(() => selectedIndex = index);
-    if (index == 3) {
-      Navigator.pushReplacementNamed(context, '/list');
-    } else if (index == 2) {
-      Navigator.pushReplacementNamed(context, '/profile');
-    }
-    else if (index == 1) {
-      Navigator.pushReplacementNamed(context, '/stats');
-    }
-  }
+// Navigates to different named routes based on selected index.
+void _onTabSelected(int index) {
+  // Update the state to reflect the selected tab index (used for icon highlighting)
+  setState(() => selectedIndex = index);
 
-  // Handles press of the floating action button to add a new transaction.
-  // After user returns, updates both the transaction list and balance totals.
-  void _onFabPressed() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-    );
-
-    if (result == 'updated' || result == 'added') {
-      await _loadTodayTransactions();
-      await _loadTotals();
-    }
+  // Navigate to the appropriate screen based on the selected tab
+  if (index == 3) {
+    // Navigate to the transaction list screen
+    Navigator.pushReplacementNamed(context, '/list');
+  } else if (index == 2) {
+    // Navigate to the profile screen
+    Navigator.pushReplacementNamed(context, '/profile');
+  } else if (index == 1) {
+    // Navigate to the stats screen
+    Navigator.pushReplacementNamed(context, '/stats');
   }
+  // If index == 0 (Home), no navigation is triggered because we're already on Home
+}
+
+// Handles press of the floating action button to add a new transaction.
+// After user returns, updates both the transaction list and balance totals.
+void _onFabPressed() async {
+  // Open the AddTransactionScreen and wait for the result
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+  );
+
+  // If the user added or updated a transaction, reload today's transactions and totals
+  if (result == 'updated' || result == 'added') {
+    await _loadTodayTransactions(); // Refresh today's transactions
+    await _loadTotals(); // Refresh income, expense, and balance
+  }
+}
 
 
   @override
